@@ -9,16 +9,27 @@
 //lighting functions
 color get_lighting( double *normal, double *view, color alight, double light[2][3], double *areflect, double *dreflect, double *sreflect) {
   color i;
+  color a = calculate_ambient(alight, areflect);
+  color d = calculate_diffuse(light, dreflect, normal);
+  i.red = a.red + d.red;
+  i.green = a.green + d.green;
+  i.red = a.blue + d.blue;
   return i;
 }
 
 color calculate_ambient(color alight, double *areflect ) {
   color a;
+  a.red = alight.red * areflect[RED];
+  a.green = alight.green * areflect[GREEN];
+  a.blue = alight.blue * areflect[BLUE];
   return a;
 }
 
 color calculate_diffuse(double light[2][3], double *dreflect, double *normal ) {
   color d;
+  d.red = light[COLOR][RED] * dreflect[RED]*dot_product(light[LOCATION],normal);
+  d.green = light[COLOR][GREEN] * dreflect[GREEN]*dot_product(light[LOCATION],normal);
+  d.blue = light[COLOR][BLUE] * dreflect[BLUE]*dot_product(light[LOCATION],normal);
   return d;
 }
 
@@ -31,16 +42,32 @@ color calculate_specular(double light[2][3], double *sreflect, double *view, dou
 
 //limit each component of c to a max of 255
 void limit_color( color * c ) {
+  if(c[0].red > 255){
+    c[0].red = 255;
+  }
+  if(c[0].green > 255){
+    c[0].green = 255;
+  }
+  if(c[0].blue > 255){
+    c[0].blue = 255;
+  }
 }
 
 //vector functions
 //normalize vetor, should modify the parameter
 void normalize( double *vector ) {
+  double magnitude = sqrt((vector[0]*vector[0])+
+			  (vector[1]*vector[1])+
+			  (vector[2]*vector[2]));
+
+  vector[0] = vector[0]/magnitude;
+  vector[1] = vector[0]/magnitude;
+  vector[2] = vector[0]/magnitude;
 }
 
-//Return the dot porduct of a . b
+//Return the dot product of a . b
 double dot_product( double *a, double *b ) {
-  return 0;
+  return (a[0]*b[0]) + (a[1]*b[1]) + (a[2]*b[2]);
 }
 
 double *calculate_normal(struct matrix *polygons, int i) {
