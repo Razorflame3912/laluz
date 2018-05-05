@@ -44,9 +44,9 @@ int main(int argc, char **argv) {
   dreflect[GREEN] = 0.5;
   dreflect[BLUE] = 0.5;
 
-  sreflect[RED] = 0.5;
-  sreflect[GREEN] = 0.5;
-  sreflect[BLUE] = 0.5;
+  sreflect[RED] = 0.75;
+  sreflect[GREEN] = 0.75;
+  sreflect[BLUE] = 0.75;
 
 
 

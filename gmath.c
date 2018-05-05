@@ -11,9 +11,11 @@ color get_lighting( double *normal, double *view, color alight, double light[2][
   color i;
   color a = calculate_ambient(alight, areflect);
   color d = calculate_diffuse(light, dreflect, normal);
-  i.red = a.red + d.red;
-  i.green = a.green + d.green;
-  i.red = a.blue + d.blue;
+  color s = calculate_specular(light, sreflect, view, normal);
+  i.red = a.red + d.red + s.red;
+  i.green = a.green + d.green + s.green;
+  i.blue = a.blue + d.blue + s.blue;
+  limit_color(&i);
   return i;
 }
 
@@ -27,15 +29,58 @@ color calculate_ambient(color alight, double *areflect ) {
 
 color calculate_diffuse(double light[2][3], double *dreflect, double *normal ) {
   color d;
+  normalize(light[LOCATION]);
+  normalize(normal);
   d.red = light[COLOR][RED] * dreflect[RED]*dot_product(light[LOCATION],normal);
   d.green = light[COLOR][GREEN] * dreflect[GREEN]*dot_product(light[LOCATION],normal);
   d.blue = light[COLOR][BLUE] * dreflect[BLUE]*dot_product(light[LOCATION],normal);
+  limit_color(&d);
   return d;
 }
 
 color calculate_specular(double light[2][3], double *sreflect, double *view, double *normal ) {
+  double r[3];
+  double l[3];
+  r[0] = normal[0];
+  r[1] = normal[1];
+  r[2] = normal[2];
+  l[0] = light[LOCATION][0];
+  l[1] = light[LOCATION][1];
+  l[2] = light[LOCATION][2];
+  normalize(light[LOCATION]);
+  normalize(view);
+  normalize(normal);
+  if(dot_product(light[LOCATION],normal) < 0){
+    color s;
+    s.red = 0;
+    s.green = 0;
+    s.blue = 0;
+    return s;
+  }
+  double power = 5;
+  double redinit  = light[COLOR][RED] * sreflect[RED];
+  double greeninit  = light[COLOR][GREEN] * sreflect[GREEN];
+  double blueinit  = light[COLOR][BLUE] * sreflect[BLUE];
+  double calc = 2 * dot_product(normal,light[LOCATION]);
+  r[0] *= calc;
+  r[1] *= calc;
+  r[2] *= calc;
+  r[0] -= l[0];
+  r[1] -= l[1];
+  r[2] -= l[2];
+  double whole = dot_product(r,view);
+  
+	       
+  if(whole < 0){
+    calc = 0;
+  }
+  whole = pow(whole, power);
 
   color s;
+  s.red = redinit * whole;
+  s.green = greeninit * whole;
+  s.blue = blueinit * whole;
+  limit_color(&s);
   return s;
 }
 
@@ -51,6 +96,15 @@ void limit_color( color * c ) {
   if(c[0].blue > 255){
     c[0].blue = 255;
   }
+  if(c[0].red < 0){
+    c[0].red = 0;
+  }
+  if(c[0].green < 0){
+    c[0].green = 0;
+  }
+  if(c[0].blue < 0){
+    c[0].blue = 0;
+  }
 }
 
 //vector functions
@@ -61,8 +115,8 @@ void normalize( double *vector ) {
 			  (vector[2]*vector[2]));
 
   vector[0] = vector[0]/magnitude;
-  vector[1] = vector[0]/magnitude;
-  vector[2] = vector[0]/magnitude;
+  vector[1] = vector[1]/magnitude;
+  vector[2] = vector[2]/magnitude;
 }
 
 //Return the dot product of a . b
